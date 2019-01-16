@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Hermes</string>
+    <string name="edit_message">Enter message…</string>
+    <string name="send_button">Send</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="repeatPassword">Repeat Password</string>
+    <string name="login">Log in</string>
+    <string name="register">Create Account</string>
+    <string name="logout">Logout</string>
+    <string name="registerMessage">Not registered?</string>
+    <string name="createAccount">Create an account</string>
+    <string name="loginMessage">Already registered?</string>
+</resources>

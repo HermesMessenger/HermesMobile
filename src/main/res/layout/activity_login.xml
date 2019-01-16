@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Login">
+
+    <FrameLayout
+        android:id="@+id/background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#8DC26F"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="55dp">
+
+
+        <FrameLayout
+            android:id="@+id/box"
+            android:layout_width="match_parent"
+            android:layout_height="333dp"
+            android:layout_marginStart="64dp"
+            android:layout_marginLeft="64dp"
+            android:layout_marginTop="128dp"
+            android:layout_marginEnd="64dp"
+            android:layout_marginRight="64dp"
+            android:background="#FFFFFF"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <EditText
+                android:id="@+id/username"
+                android:layout_width="wrap_content"
+                android:layout_height="64dp"
+                android:layout_marginLeft="32dp"
+                android:layout_marginTop="32dp"
+                android:layout_marginRight="32dp"
+                android:background="#f2f2f2"
+                android:ems="100"
+                android:hint="@string/username"
+                android:inputType="textPersonName"
+                android:textAlignment="center"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <EditText
+                android:id="@+id/password"
+                android:layout_width="wrap_content"
+                android:layout_height="64dp"
+                android:layout_marginLeft="32dp"
+                android:layout_marginTop="110dp"
+                android:layout_marginRight="32dp"
+                android:background="#f2f2f2"
+                android:ems="100"
+                android:hint="@string/password"
+                android:inputType="textPassword"
+                android:textAlignment="center"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <Button
+                android:id="@+id/button"
+                android:layout_width="wrap_content"
+                android:layout_height="64dp"
+                android:layout_marginLeft="32dp"
+                android:layout_marginTop="210dp"
+                android:layout_marginRight="32dp"
+                android:background="#4CAF50"
+                android:elevation="5000dp"
+                android:ems="100"
+                android:onClick="login"
+                android:text="@string/login"
+                android:textAlignment="center"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/desc"
+                android:layout_width="wrap_content"
+                android:layout_height="16dp"
+                android:layout_marginLeft="32dp"
+                android:layout_marginTop="290dp"
+                android:layout_marginRight="32dp"
+                android:ems="100"
+                android:text="@string/registerMessage"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <Button
+                android:id="@+id/register"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:layout_marginLeft="128dp"
+                android:layout_marginTop="270dp"
+                android:layout_marginRight="32dp"
+                android:ems="100"
+                android:onClick="goToRegister"
+                android:text="@string/createAccount"
+                android:textColor="#4CAF50"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent" />
+
+        </FrameLayout>
+
+    </FrameLayout>
+
+</android.support.constraint.ConstraintLayout>

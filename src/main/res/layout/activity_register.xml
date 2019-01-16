@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Register">
+
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:layout_editor_absoluteX="0dp">
+
+
+        <FrameLayout
+            android:id="@+id/background"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#8DC26F"
+            tools:layout_editor_absoluteX="0dp"
+            tools:layout_editor_absoluteY="55dp">
+
+
+            <FrameLayout
+                android:id="@+id/box"
+                android:layout_width="match_parent"
+                android:layout_height="411dp"
+                android:layout_marginStart="64dp"
+                android:layout_marginLeft="64dp"
+                android:layout_marginTop="128dp"
+                android:layout_marginEnd="64dp"
+                android:layout_marginRight="64dp"
+                android:background="#FFFFFF"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="1.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <EditText
+                    android:id="@+id/username"
+                    android:layout_width="wrap_content"
+                    android:layout_height="64dp"
+                    android:layout_marginLeft="32dp"
+                    android:layout_marginTop="32dp"
+                    android:layout_marginRight="32dp"
+                    android:background="#f2f2f2"
+                    android:ems="100"
+                    android:hint="@string/username"
+                    android:autofillHints="username"
+                    android:inputType="textPersonName"
+                    android:textAlignment="center"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <EditText
+                    android:id="@+id/password"
+                    android:layout_width="wrap_content"
+                    android:layout_height="64dp"
+                    android:layout_marginLeft="32dp"
+                    android:layout_marginTop="110dp"
+                    android:layout_marginRight="32dp"
+                    android:background="#f2f2f2"
+                    android:ems="100"
+                    android:hint="@string/password"
+                    android:autofillHints="password"
+                    android:inputType="textPassword"
+                    android:textAlignment="center"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <EditText
+                    android:id="@+id/repeatPassword"
+                    android:layout_width="wrap_content"
+                    android:layout_height="64dp"
+                    android:layout_marginLeft="32dp"
+                    android:layout_marginTop="188dp"
+                    android:layout_marginRight="32dp"
+                    android:background="#f2f2f2"
+                    android:ems="100"
+                    android:hint="@string/repeatPassword"
+                    android:autofillHints="password"
+                    android:inputType="textPassword"
+                    android:textAlignment="center"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <Button
+                    android:id="@+id/button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="64dp"
+                    android:layout_marginLeft="32dp"
+                    android:layout_marginTop="280dp"
+                    android:layout_marginRight="32dp"
+                    android:background="#4CAF50"
+                    android:ems="100"
+                    android:onClick="register"
+                    android:text="@string/register"
+                    android:textAlignment="center"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <TextView
+                    android:id="@+id/register1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="16dp"
+                    android:layout_marginLeft="32dp"
+                    android:layout_marginTop="366dp"
+                    android:layout_marginRight="32dp"
+                    android:ems="100"
+                    android:text="@string/loginMessage"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <Button
+                    android:id="@+id/register2"
+                    style="@style/Widget.AppCompat.Button.Borderless"
+                    android:layout_width="72dp"
+                    android:layout_height="38dp"
+                    android:layout_marginLeft="160dp"
+                    android:layout_marginTop="356dp"
+                    android:layout_marginRight="32dp"
+                    android:ems="100"
+                    android:onClick="goToLogin"
+                    android:text="@string/login"
+                    android:textColor="#4CAF50"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+            </FrameLayout>
+        </FrameLayout>
+    </ScrollView>
+
+</android.support.constraint.ConstraintLayout>
