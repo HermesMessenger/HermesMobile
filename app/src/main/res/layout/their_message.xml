@@ -2,30 +2,30 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp"
     android:paddingStart="15dp"
     android:paddingEnd="60dp"
-    android:clipToPadding="false">
+    android:clipToPadding="false"
+>
 
     <ImageView
         android:id="@+id/image"
         android:layout_alignParentStart="true"
         android:scaleType="centerInside"
-        android:background="#333333"
-        android:layout_width="34dp"
-        android:layout_height="34dp"
+        android:background="#000000"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:contentDescription="@string/profilePicture"
     />
 
     <TextView
         android:id="@+id/username"
-        android:layout_marginStart="15dp"
+        android:layout_marginStart="12dp"
         android:layout_toEndOf="@+id/image"
         android:layout_alignTop="@+id/image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingBottom="4dp"
         android:text=""
     />
 
@@ -36,12 +36,14 @@
         android:layout_below="@+id/username"
         android:layout_alignStart="@+id/username"
         android:background="@drawable/their_message"
-        android:paddingTop="16dp"
-        android:paddingBottom="8dp"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
         android:elevation="2dp"
+        android:textColor="#000000"
         android:textSize="18sp"
         android:text=""
     />
+
 </RelativeLayout>

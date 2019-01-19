@@ -31,25 +31,21 @@ import java.util.TimerTask;
 
 public class Chat extends AppCompatActivity {
 
-    static String HermesURL;
+    static String HermesURL = "https://hermesmessenger-testing.duckdns.org";
     String HermesUUID;
     String HermesUsername;
+
     MessageAdapter messageAdapter;
     int offset = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-
-        Timer timer = new Timer();
-
         super.onCreate(savedInstanceState);
 
-        SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("preferences", 0);
 
         Settings settings = new Settings(this);
 
-        HermesURL = "https://hermesmessenger-testing.duckdns.org";
 
         HermesUUID = settings.getUUID();
         HermesUsername = settings.getUsername();
@@ -57,38 +53,36 @@ public class Chat extends AppCompatActivity {
         if (HermesUUID.equals("")) {
             startActivity(new Intent(this, Login.class));
             return;
-        } else {
-            setContentView(R.layout.activity_chat);
-        }
+
+        } else setContentView(R.layout.activity_chat);
 
         AndroidNetworking.initialize(getApplicationContext());
-
-
 
         messageAdapter = new MessageAdapter(Chat.this);
         ListView messagesListView  = (ListView) findViewById(R.id.messages_view);
         messagesListView.setAdapter(messageAdapter);
+
         Timer t = new Timer();
         t.schedule(new TimerTask() {
 
             @Override
             public void run() {
                 Chat.this.runOnUiThread(new Runnable() {
+
+                    @Override
                     public void run() {
                         loadMessages();
                     }
                 });
             }
-        },0, 1000);
+        },0, 500);
 
     }
-
 
 
     public void sendMessage(View view) {
         final EditText msg = findViewById(R.id.msg);
         final String message = msg.getText().toString();
-
 
         if (message.matches("^\\s*$")) {
             Toast.makeText(this, "Message is empty", Toast.LENGTH_SHORT).show();
@@ -101,7 +95,7 @@ public class Chat extends AppCompatActivity {
             .getAsString(new StringRequestListener() {
                 @Override
                 public void onResponse(String res) {
-
+                    // No need to do anything with the response since the message was sent successfully
                 }
 
                 @Override
@@ -110,7 +104,7 @@ public class Chat extends AppCompatActivity {
                 }
             });
 
-        msg.setText("");
+        msg.setText(""); // Clear message field
     }
 
     public void loadMessages() {
@@ -125,9 +119,7 @@ public class Chat extends AppCompatActivity {
                 @Override
                 public void onResponse(JSONArray res) {
 
-                    //final MessageAdapter messageAdapter = new MessageAdapter(Chat.this);
-
-                    SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("preferences", 0);
+                    SharedPreferences sharedPref = Chat.this.getSharedPreferences("preferences", 0);
                     SharedPreferences.Editor editor = sharedPref.edit();
 
                     for(int n = 0; n < res.length(); n++) {
@@ -135,18 +127,16 @@ public class Chat extends AppCompatActivity {
                         try {
                             JSONObject json = res.getJSONObject(n);
 
-
                             if(json.getInt("time")>offset) {
                                 final String sender = json.getString("username");
                                 final String text = json.getString("message");
                                 final String time = json.getString("time");
-                                final boolean belongsToCurrentUser = sender.equals(HermesUsername);
-                                //System.out.println(sender + " " + HermesUsername + " " + sender.equals(HermesUsername));
+                                final boolean belongsToMe = sender.equals(HermesUsername);
 
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        messageAdapter.add(new Message(sender, text, time, belongsToCurrentUser));
+                                        messageAdapter.add(new Message(sender, text, time, belongsToMe));
                                     }
                                 });
 
@@ -154,7 +144,7 @@ public class Chat extends AppCompatActivity {
                             }
 
                         } catch (JSONException err) {
-                            Log.e("Error", "JSON error: " + err);
+                            Log.e("JSON error", err.toString());
                         }
                     }
 
@@ -162,7 +152,7 @@ public class Chat extends AppCompatActivity {
                 }
                 @Override
                 public void onError(ANError err) {
-                    // handle error
+                    Log.e("HTTP error", err.toString());
                 }
             });
     }

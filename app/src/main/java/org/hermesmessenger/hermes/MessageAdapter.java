@@ -17,7 +17,7 @@ import java.util.List;
 
 public class MessageAdapter extends BaseAdapter {
 
-    List<Message> messages = new ArrayList<Message>();
+    List<Message> messages = new ArrayList<>();
     Context context;
 
     public MessageAdapter(Context context) {
@@ -26,8 +26,7 @@ public class MessageAdapter extends BaseAdapter {
 
     public void add(Message message) {
         this.messages.add(message);
-        this.
-        notifyDataSetChanged(); // to render the list we need to notify
+        this.notifyDataSetChanged(); // to render the list we need to notify
     }
 
     @Override
@@ -45,24 +44,24 @@ public class MessageAdapter extends BaseAdapter {
         return messages.size();
     }
 
-    // This is the backbone of the class, it handles the creation of single ListView row (chat bubble)
     @Override
-    public View getView(int i, View convertView, ViewGroup viewGroup) {
+    public View getView(int i, View view, ViewGroup viewGroup) {
         MessageViewHolder holder = new MessageViewHolder();
         LayoutInflater messageInflater = (LayoutInflater) context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
         Message message = messages.get(i);
 
-        if (message.belongsToCurrentUser()) { // this message was sent by us so let's create a basic chat bubble on the right
-            convertView = messageInflater.inflate(R.layout.my_message, null);
-            holder.messageBody = (TextView) convertView.findViewById(R.id.message);
-            convertView.setTag(holder);
+        if (message.belongsToCurrentUser()) { // message was sent by current user
+            view = messageInflater.inflate(R.layout.my_message, null);
+            holder.messageBody = view.findViewById(R.id.message);
+            view.setTag(holder);
             holder.messageBody.setText(message.getMessage());
-        } else { // this message was sent by someone else so let's create an advanced chat bubble on the left
-            convertView = messageInflater.inflate(R.layout.their_message, null);
-            holder.avatar = (View) convertView.findViewById(R.id.image);
-            holder.name = (TextView) convertView.findViewById(R.id.username);
-            holder.messageBody = (TextView) convertView.findViewById(R.id.message);
-            convertView.setTag(holder);
+
+        } else { // message was sent by someone else
+            view = messageInflater.inflate(R.layout.their_message, null);
+            holder.avatar = view.findViewById(R.id.image);
+            holder.name = view.findViewById(R.id.username);
+            holder.messageBody = view.findViewById(R.id.message);
+            view.setTag(holder);
 
             // TODO: Avatar (https://stackoverflow.com/questions/2471935/how-to-load-an-imageview-by-url-in-android), we would need an imageview, not a view
 
@@ -70,9 +69,9 @@ public class MessageAdapter extends BaseAdapter {
             holder.messageBody.setText(message.getMessage());
             ColorDrawable drawable = (ColorDrawable) holder.avatar.getBackground();
 
-            drawable.setColor(Color.parseColor("#1234ff"));
+            drawable.setColor(Color.parseColor("#81D4FA"));
         }
-        return convertView;
+        return view;
     }
 
 }
