@@ -3,7 +3,6 @@ package org.hermesmessenger.hermes;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -49,6 +48,7 @@ public class Chat extends AppCompatActivity {
     static String HermesURL;
     String HermesUUID;
     String HermesUsername;
+
     MessageAdapter messageAdapter;
     int offset = 0;
     Map<String, MessageStyleData> user_styles; // TODO Save in images as paths to files, not bitmaps, because it causes an out of memory error
@@ -62,7 +62,6 @@ public class Chat extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
 
-        SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("preferences", 0);
 
         Settings settings = new Settings(this);
 
@@ -74,38 +73,36 @@ public class Chat extends AppCompatActivity {
         if (HermesUUID.equals("")) {
             startActivity(new Intent(this, Login.class));
             return;
-        } else {
-            setContentView(R.layout.activity_chat);
-        }
+
+        } else setContentView(R.layout.activity_chat);
 
         AndroidNetworking.initialize(getApplicationContext());
-
-
 
         messageAdapter = new MessageAdapter(Chat.this);
         ListView messagesListView  = (ListView) findViewById(R.id.messages_view);
         messagesListView.setAdapter(messageAdapter);
+
         Timer t = new Timer();
         t.schedule(new TimerTask() {
 
             @Override
             public void run() {
                 Chat.this.runOnUiThread(new Runnable() {
+
+                    @Override
                     public void run() {
                         loadMessages();
                     }
                 });
             }
-        },0, 1000);
+        },0, 500);
 
     }
-
 
 
     public void sendMessage(View view) {
         final EditText msg = findViewById(R.id.msg);
         final String message = msg.getText().toString();
-
 
         if (message.matches("^\\s*$")) {
             Toast.makeText(this, "Message is empty", Toast.LENGTH_SHORT).show();
@@ -118,7 +115,7 @@ public class Chat extends AppCompatActivity {
             .getAsString(new StringRequestListener() {
                 @Override
                 public void onResponse(String res) {
-
+                    // No need to do anything with the response since the message was sent successfully
                 }
 
                 @Override
@@ -127,7 +124,7 @@ public class Chat extends AppCompatActivity {
                 }
             });
 
-        msg.setText("");
+        msg.setText(""); // Clear message field
     }
 
     String sender = "";
@@ -149,16 +146,13 @@ public class Chat extends AppCompatActivity {
                 @Override
                 public void onResponse(JSONArray res) {
 
-                    //final MessageAdapter messageAdapter = new MessageAdapter(Chat.this);
-
-                    SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("preferences", 0);
+                    SharedPreferences sharedPref = Chat.this.getSharedPreferences("preferences", 0);
                     SharedPreferences.Editor editor = sharedPref.edit();
 
                     for(int n = 0; n < res.length(); n++) {
 
                         try {
                             JSONObject json = res.getJSONObject(n);
-
 
                             if(json.getInt("time")>offset) {
                                 sender = json.getString("username");
@@ -206,7 +200,7 @@ public class Chat extends AppCompatActivity {
                             }
 
                         } catch (JSONException err) {
-                            Log.e("Error", "JSON error: " + err);
+                            Log.e("JSON error", err.toString());
                         }
                     }
 
@@ -214,7 +208,7 @@ public class Chat extends AppCompatActivity {
                 }
                 @Override
                 public void onError(ANError err) {
-                    // handle error
+                    Log.e("HTTP error", err.toString());
                 }
             });
     }

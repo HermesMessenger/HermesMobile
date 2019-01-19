@@ -18,7 +18,7 @@ import java.util.List;
 
 public class MessageAdapter extends BaseAdapter {
 
-    List<Message> messages = new ArrayList<Message>();
+    List<Message> messages = new ArrayList<>();
     Context context;
 
     public MessageAdapter(Context context) {
@@ -27,8 +27,7 @@ public class MessageAdapter extends BaseAdapter {
 
     public void add(Message message) {
         this.messages.add(message);
-        this.
-        notifyDataSetChanged(); // to render the list we need to notify
+        this.notifyDataSetChanged(); // to render the list we need to notify
     }
 
     @Override
@@ -46,7 +45,6 @@ public class MessageAdapter extends BaseAdapter {
         return messages.size();
     }
 
-    // This is the backbone of the class, it handles the creation of single ListView row (chat bubble)
     @Override
     public View getView(int i, View convertView, ViewGroup viewGroup) {
         MessageViewHolder holder = new MessageViewHolder();

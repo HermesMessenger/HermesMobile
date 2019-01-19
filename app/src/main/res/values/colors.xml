@@ -5,4 +5,5 @@
     <color name="colorPrimary">#43a047</color>
     <color name="colorPrimaryDark">#2e7d32</color>
     <color name="colorAccent">#0288d1</color>
+    <color name="colorImage">#81D4FA</color> <!-- TODO: Delete this when we implement profile pictures -->
 </resources>
