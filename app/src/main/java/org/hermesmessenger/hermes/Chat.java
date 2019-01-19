@@ -1,9 +1,11 @@
 package org.hermesmessenger.hermes;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Bundle;
+import android.graphics.Bitmap;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -14,11 +16,14 @@ import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.JSONArrayRequestListener;
+import com.androidnetworking.interfaces.JSONObjectRequestListener;
+import com.androidnetworking.interfaces.ParsedRequestListener;
 import com.androidnetworking.interfaces.StringRequestListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import com.google.gson.JsonObject;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,7 +32,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -35,10 +44,22 @@ import static org.hermesmessenger.hermes.Settings.HermesURL;
 import static org.hermesmessenger.hermes.Settings.HermesUUID;
 import static org.hermesmessenger.hermes.Settings.HermesUsername;
 
-public class Chat extends AppCompatActivity implements Serializable {
+public class Chat extends AppCompatActivity {
+
+    private static class MessageStyleData {
+        public Bitmap avatar;
+        public String color;
+
+        public MessageStyleData(Bitmap avatar, String color) {
+            this.avatar = avatar;
+            this.color = color;
+        }
+    }
 
     MessageAdapter messageAdapter;
     int offset = 0;
+
+    Map<String, MessageStyleData> user_styles; // TODO Save in images as paths to files, not bitmaps, because it causes an out of memory error
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,6 +152,13 @@ public class Chat extends AppCompatActivity implements Serializable {
         msg.setText(""); // Clear message field
     }
 
+    String sender = "";
+    String text = "";
+    String time = "";
+    boolean belongsToCurrentUser = false;
+    String color = "#000000";
+    Bitmap avatar = null;
+
     public void loadMessages() {
 
         SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("preferences", 0);
@@ -153,17 +181,47 @@ public class Chat extends AppCompatActivity implements Serializable {
                             JSONObject json = res.getJSONObject(n);
 
                             if(json.getInt("time") > offset) {
-                                final String sender = json.getString("username");
-                                final String text = json.getString("message");
-                                final String time = json.getString("time");
-                                final boolean belongsToMe = sender.equals(HermesUsername);
+                                sender = json.getString("username");
+                                text = json.getString("message");
+                                time = json.getString("time");
+                                belongsToCurrentUser = sender.equals(HermesUsername);          final boolean belongsToMe = sender.equals(HermesUsername);
 
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        messageAdapter.add(new Message(sender, text, time, belongsToMe));
-                                    }
-                                });
+                                if (!user_styles.containsKey(sender)) {
+                                    AndroidNetworking.get(HermesURL + "/api/getSettings/" + sender).build().getAsJSONObject(new JSONObjectRequestListener() {
+                                        @Override
+                                        public void onResponse(JSONObject response) {
+                                            try {
+                                                avatar = Utils.getB64Image(response.getString("image"));
+                                                color = response.getString("color");
+                                                user_styles.put(sender, new MessageStyleData(avatar, color));
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        messageAdapter.add(new Message(sender, text, time, belongsToCurrentUser, avatar, color));
+                                                    }
+                                                });
+                                            } catch (JSONException e) {
+                                                Log.e("Error", "JSON error: " + e);
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onError(ANError anError) {
+                                            Log.e("Error", "Request error: " + anError);
+                                        }
+                                    });
+                                } else {
+                                    MessageStyleData nonNullStyle = (MessageStyleData) Objects.requireNonNull(user_styles.get(sender));
+                                    color = nonNullStyle.color;
+                                    avatar = nonNullStyle.avatar;
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            messageAdapter.add(new Message(sender, text, time, belongsToCurrentUser, avatar, color));
+                                        }
+                                    });
+                                }
+
 
                                 editor.putInt("Offset", json.getInt("time"));
                             }
