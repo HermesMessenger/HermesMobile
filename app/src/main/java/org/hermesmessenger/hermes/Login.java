@@ -2,8 +2,8 @@ package org.hermesmessenger.hermes;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -13,6 +13,8 @@ import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.StringRequestListener;
+
+import static org.hermesmessenger.hermes.Settings.HermesURL;
 
 
 public class Login extends AppCompatActivity {
@@ -46,7 +48,7 @@ public class Login extends AppCompatActivity {
         } else if (password.matches("")) {
             Toast.makeText(this, "Please enter your password", Toast.LENGTH_SHORT).show();
 
-        } else AndroidNetworking.post("https://hermesmessenger-testing.duckdns.org/api/login")
+        } else AndroidNetworking.post(HermesURL + "/api/login")
             .addBodyParameter("username", username)
             .addBodyParameter("password", password)
             .setPriority(Priority.HIGH)

@@ -4,18 +4,17 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.GradientDrawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MessageAdapter extends BaseAdapter {
+public class MessageAdapter extends BaseAdapter implements Serializable {
 
     List<Message> messages = new ArrayList<>();
     Context context;
@@ -26,8 +25,17 @@ public class MessageAdapter extends BaseAdapter {
 
     public void add(Message message) {
         this.messages.add(message);
-        this.notifyDataSetChanged(); // to render the list we need to notify
+        this.notifyDataSetChanged();
     }
+
+    public void loadFromCache(List<Message> messages ) {
+        this.messages = messages;
+    }
+
+    public List getMessages() {
+        return messages;
+    }
+
 
     @Override
     public Object getItem(int i) {

@@ -1,10 +1,9 @@
 package org.hermesmessenger.hermes;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -15,25 +14,28 @@ import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.JSONArrayRequestListener;
-import com.androidnetworking.interfaces.ParsedRequestListener;
 import com.androidnetworking.interfaces.StringRequestListener;
-import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Date;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static org.hermesmessenger.hermes.Settings.HermesURL;
+import static org.hermesmessenger.hermes.Settings.HermesUUID;
+import static org.hermesmessenger.hermes.Settings.HermesUsername;
 
-public class Chat extends AppCompatActivity {
-
-    static String HermesURL = "https://hermesmessenger-testing.duckdns.org";
-    String HermesUUID;
-    String HermesUsername;
+public class Chat extends AppCompatActivity implements Serializable {
 
     MessageAdapter messageAdapter;
     int offset = 0;
@@ -43,12 +45,7 @@ public class Chat extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
 
-
-        Settings settings = new Settings(this);
-
-
-        HermesUUID = settings.getUUID();
-        HermesUsername = settings.getUsername();
+        new Settings(this);
 
         if (HermesUUID.equals("")) {
             startActivity(new Intent(this, Login.class));
@@ -62,6 +59,19 @@ public class Chat extends AppCompatActivity {
         ListView messagesListView  = (ListView) findViewById(R.id.messages_view);
         messagesListView.setAdapter(messageAdapter);
 
+        try {
+            File file = new File(getFilesDir(), "messageCache.txt");
+            FileInputStream fis = new FileInputStream(file);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            List<Message> messages = (List<Message>) ois.readObject();
+            ois.close();
+
+            messageAdapter.loadFromCache(messages);
+
+        } catch (Exception err) {
+            Log.e("Cache Error", err.toString());
+        }
+
         Timer t = new Timer();
         t.schedule(new TimerTask() {
 
@@ -72,6 +82,20 @@ public class Chat extends AppCompatActivity {
                     @Override
                     public void run() {
                         loadMessages();
+
+                        List messages = messageAdapter.getMessages();
+
+                        try {
+
+                            File file = new File(getFilesDir(), "messageCache.txt");
+                            FileOutputStream fos = new FileOutputStream(file);
+                            ObjectOutputStream oos = new ObjectOutputStream(fos);
+                            oos.writeObject(messages);
+                            oos.close();
+
+                        } catch (IOException err) {
+                            Log.e("Cache Error", err.toString());
+                        }
                     }
                 });
             }
@@ -87,7 +111,7 @@ public class Chat extends AppCompatActivity {
         if (message.matches("^\\s*$")) {
             Toast.makeText(this, "Message is empty", Toast.LENGTH_SHORT).show();
 
-        } else AndroidNetworking.post("https://hermesmessenger-testing.duckdns.org/api/sendmessage/")
+        } else AndroidNetworking.post(HermesURL + "/api/sendmessage/")
             .addBodyParameter("uuid", HermesUUID)
             .addBodyParameter("message", message)
             .setPriority(Priority.MEDIUM)
@@ -110,8 +134,9 @@ public class Chat extends AppCompatActivity {
     public void loadMessages() {
 
         SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("preferences", 0);
-        //int offset = sharedPref.getInt("Offset", 0);
-        AndroidNetworking.post("https://hermesmessenger-testing.duckdns.org/api/loadmessages/" + offset)
+        final int offset = sharedPref.getInt("Offset", 0);
+
+        AndroidNetworking.post(HermesURL + "/api/loadmessages/" + offset)
             .addBodyParameter("uuid", HermesUUID)
             .setPriority(Priority.LOW)
             .build()
@@ -127,7 +152,7 @@ public class Chat extends AppCompatActivity {
                         try {
                             JSONObject json = res.getJSONObject(n);
 
-                            if(json.getInt("time")>offset) {
+                            if(json.getInt("time") > offset) {
                                 final String sender = json.getString("username");
                                 final String text = json.getString("message");
                                 final String time = json.getString("time");
@@ -140,7 +165,7 @@ public class Chat extends AppCompatActivity {
                                     }
                                 });
 
-                                offset = json.getInt("time");
+                                editor.putInt("Offset", json.getInt("time"));
                             }
 
                         } catch (JSONException err) {
