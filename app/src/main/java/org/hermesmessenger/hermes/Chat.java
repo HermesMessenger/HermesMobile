@@ -34,9 +34,11 @@ public class Chat extends AppCompatActivity {
     static String HermesURL;
     static String HermesUUID;
     static String HermesUsername;
+    MessageAdapter messageAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        messageAdapter = new MessageAdapter(Chat.this);
 
         Timer timer = new Timer();
 
@@ -115,7 +117,7 @@ public class Chat extends AppCompatActivity {
                 @Override
                 public void onResponse(JSONArray res) {
 
-                    final MessageAdapter messageAdapter = new MessageAdapter(Chat.this);
+                    //final MessageAdapter messageAdapter = new MessageAdapter(Chat.this);
 
                     SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("preferences", 0);
                     SharedPreferences.Editor editor = sharedPref.edit();
@@ -129,6 +131,7 @@ public class Chat extends AppCompatActivity {
                             final String text = json.getString("message");
                             final String time = json.getString("time");
                             final boolean belongsToCurrentUser = sender.equals(HermesUsername);
+                            //System.out.println(sender + " " + text + " " + time + " " + belongsToCurrentUser);
 
 
                             runOnUiThread(new Runnable() {

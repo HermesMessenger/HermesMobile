@@ -25,3 +25,8 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+task connectWifi(type: Exec) {
+    workingDir "$projectDir/binTools"
+    commandLine 'bash', 'adb_wifi.sh'
+}
