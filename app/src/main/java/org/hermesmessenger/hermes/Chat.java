@@ -3,6 +3,7 @@ package org.hermesmessenger.hermes;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,6 +16,7 @@ import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.JSONArrayRequestListener;
+import com.androidnetworking.interfaces.JSONObjectRequestListener;
 import com.androidnetworking.interfaces.ParsedRequestListener;
 import com.androidnetworking.interfaces.StringRequestListener;
 import com.google.gson.JsonObject;
@@ -24,24 +26,39 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
 
 public class Chat extends AppCompatActivity {
 
+    private static class MessageStyleData {
+        public Bitmap avatar;
+        public String color;
+
+        public MessageStyleData(Bitmap avatar, String color) {
+            this.avatar = avatar;
+            this.color = color;
+        }
+    }
+
     static String HermesURL;
     String HermesUUID;
     String HermesUsername;
     MessageAdapter messageAdapter;
     int offset = 0;
+    Map<String, MessageStyleData> user_styles; // TODO Save in images as paths to files, not bitmaps, because it causes an out of memory error
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
 
         Timer timer = new Timer();
+        user_styles = new HashMap<>();
 
         super.onCreate(savedInstanceState);
 
@@ -93,7 +110,7 @@ public class Chat extends AppCompatActivity {
         if (message.matches("^\\s*$")) {
             Toast.makeText(this, "Message is empty", Toast.LENGTH_SHORT).show();
 
-        } else AndroidNetworking.post("https://hermesmessenger-testing.duckdns.org/api/sendmessage/")
+        } else AndroidNetworking.post(HermesURL+"/api/sendmessage/")
             .addBodyParameter("uuid", HermesUUID)
             .addBodyParameter("message", message)
             .setPriority(Priority.MEDIUM)
@@ -113,11 +130,18 @@ public class Chat extends AppCompatActivity {
         msg.setText("");
     }
 
+    String sender = "";
+    String text = "";
+    String time = "";
+    boolean belongsToCurrentUser = false;
+    String color = "#000000";
+    Bitmap avatar = null;
+
     public void loadMessages() {
 
         SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("preferences", 0);
         //int offset = sharedPref.getInt("Offset", 0);
-        AndroidNetworking.post("https://hermesmessenger-testing.duckdns.org/api/loadmessages/" + offset)
+        AndroidNetworking.post(HermesURL+"/api/loadmessages/" + offset)
             .addBodyParameter("uuid", HermesUUID)
             .setPriority(Priority.LOW)
             .build()
@@ -137,18 +161,46 @@ public class Chat extends AppCompatActivity {
 
 
                             if(json.getInt("time")>offset) {
-                                final String sender = json.getString("username");
-                                final String text = json.getString("message");
-                                final String time = json.getString("time");
-                                final boolean belongsToCurrentUser = sender.equals(HermesUsername);
-                                //System.out.println(sender + " " + HermesUsername + " " + sender.equals(HermesUsername));
+                                sender = json.getString("username");
+                                text = json.getString("message");
+                                time = json.getString("time");
+                                belongsToCurrentUser = sender.equals(HermesUsername);
+                                if(!user_styles.containsKey(sender)){
+                                    AndroidNetworking.get(HermesURL+"/api/getSettings/" + sender).build().getAsJSONObject(new JSONObjectRequestListener() {
+                                        @Override
+                                        public void onResponse(JSONObject response) {
+                                            try {
+                                                avatar = Utils.getB64Image(response.getString("image"));
+                                                color = response.getString("color");
+                                                user_styles.put(sender, new MessageStyleData(avatar, color));
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        messageAdapter.add(new Message(sender, text, time, belongsToCurrentUser, avatar, color));
+                                                    }
+                                                });
+                                            }catch (JSONException e){
+                                                Log.e("Error", "JSON error: " + e);
+                                            }
+                                        }
 
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        messageAdapter.add(new Message(sender, text, time, belongsToCurrentUser));
-                                    }
-                                });
+                                        @Override
+                                        public void onError(ANError anError) {
+                                            Log.e("Error", "Request error: " + anError);
+                                        }
+                                    });
+                                }else {
+                                    MessageStyleData nonNullStyle = (MessageStyleData) Objects.requireNonNull(user_styles.get(sender));
+                                    color = nonNullStyle.color;
+                                    avatar = nonNullStyle.avatar;
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            messageAdapter.add(new Message(sender, text, time, belongsToCurrentUser, avatar, color));
+                                        }
+                                    });
+                                }
+
 
                                 offset = json.getInt("time");
                             }

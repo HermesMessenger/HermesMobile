@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -59,18 +60,20 @@ public class MessageAdapter extends BaseAdapter {
             holder.messageBody.setText(message.getMessage());
         } else { // this message was sent by someone else so let's create an advanced chat bubble on the left
             convertView = messageInflater.inflate(R.layout.their_message, null);
-            holder.avatar = (View) convertView.findViewById(R.id.image);
+            holder.avatar = (ImageView) convertView.findViewById(R.id.image);
+
             holder.name = (TextView) convertView.findViewById(R.id.username);
             holder.messageBody = (TextView) convertView.findViewById(R.id.message);
             convertView.setTag(holder);
 
-            // TODO: Avatar (https://stackoverflow.com/questions/2471935/how-to-load-an-imageview-by-url-in-android), we would need an imageview, not a view
 
             holder.name.setText(message.getSender());
+            holder.name.setTextColor(Color.parseColor(message.getColor()));
             holder.messageBody.setText(message.getMessage());
-            ColorDrawable drawable = (ColorDrawable) holder.avatar.getBackground();
+            holder.avatar.setImageBitmap(message.getAvatar());
+            /*ColorDrawable drawable = (ColorDrawable) holder.avatar.getBackground();
 
-            drawable.setColor(Color.parseColor("#1234ff"));
+            drawable.setColor(Color.parseColor("#1234ff"));*/
         }
         return convertView;
     }
@@ -78,7 +81,7 @@ public class MessageAdapter extends BaseAdapter {
 }
 
 class MessageViewHolder {
-    public View avatar;
+    public ImageView avatar;
     public TextView name;
     public TextView messageBody;
 }
