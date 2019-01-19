@@ -3,6 +3,7 @@ package org.hermesmessenger.hermes;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -47,7 +48,6 @@ public class MessageAdapter extends BaseAdapter {
     // This is the backbone of the class, it handles the creation of single ListView row (chat bubble)
     @Override
     public View getView(int i, View convertView, ViewGroup viewGroup) {
-        System.out.println("New message");
         MessageViewHolder holder = new MessageViewHolder();
         LayoutInflater messageInflater = (LayoutInflater) context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
         Message message = messages.get(i);
@@ -64,12 +64,14 @@ public class MessageAdapter extends BaseAdapter {
             holder.messageBody = (TextView) convertView.findViewById(R.id.message);
             convertView.setTag(holder);
 
+            // TODO: Avatar (https://stackoverflow.com/questions/2471935/how-to-load-an-imageview-by-url-in-android), we would need an imageview, not a view
+
             holder.name.setText(message.getSender());
             holder.messageBody.setText(message.getMessage());
-            GradientDrawable drawable = (GradientDrawable) holder.avatar.getBackground();
+            ColorDrawable drawable = (ColorDrawable) holder.avatar.getBackground();
+
             drawable.setColor(Color.parseColor("#1234ff"));
         }
-
         return convertView;
     }
 

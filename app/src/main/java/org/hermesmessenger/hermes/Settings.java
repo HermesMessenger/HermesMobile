@@ -6,22 +6,22 @@ import android.content.SharedPreferences;
 
 public class Settings extends Application {
 
-    private static String HermesUsername;
-    private static String HermesUUID;
+    private String HermesUsername;
+    private String HermesUUID;
 
 
     public Settings(Context context) {
 
         SharedPreferences sharedPref = context.getSharedPreferences("preferences",0);
         HermesUUID = sharedPref.getString("UUID", "");
-        HermesUsername = sharedPref.getString("username", "");
+        HermesUsername = sharedPref.getString("Username", "");
     }
 
-    public static String getUsername() {
+    public String getUsername() {
         return HermesUsername;
     }
 
-    public static String getUUID() {
+    public String getUUID() {
         return HermesUUID;
     }
 

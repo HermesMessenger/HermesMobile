@@ -32,13 +32,14 @@ import java.util.TimerTask;
 public class Chat extends AppCompatActivity {
 
     static String HermesURL;
-    static String HermesUUID;
-    static String HermesUsername;
+    String HermesUUID;
+    String HermesUsername;
     MessageAdapter messageAdapter;
+    int offset = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        messageAdapter = new MessageAdapter(Chat.this);
+
 
         Timer timer = new Timer();
 
@@ -55,6 +56,7 @@ public class Chat extends AppCompatActivity {
 
         if (HermesUUID.equals("")) {
             startActivity(new Intent(this, Login.class));
+            return;
         } else {
             setContentView(R.layout.activity_chat);
         }
@@ -62,6 +64,10 @@ public class Chat extends AppCompatActivity {
         AndroidNetworking.initialize(getApplicationContext());
 
 
+
+        messageAdapter = new MessageAdapter(Chat.this);
+        ListView messagesListView  = (ListView) findViewById(R.id.messages_view);
+        messagesListView.setAdapter(messageAdapter);
         Timer t = new Timer();
         t.schedule(new TimerTask() {
 
@@ -77,9 +83,12 @@ public class Chat extends AppCompatActivity {
 
     }
 
+
+
     public void sendMessage(View view) {
         final EditText msg = findViewById(R.id.msg);
         final String message = msg.getText().toString();
+
 
         if (message.matches("^\\s*$")) {
             Toast.makeText(this, "Message is empty", Toast.LENGTH_SHORT).show();
@@ -107,8 +116,7 @@ public class Chat extends AppCompatActivity {
     public void loadMessages() {
 
         SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("preferences", 0);
-        int offset = sharedPref.getInt("Offset", 0);
-
+        //int offset = sharedPref.getInt("Offset", 0);
         AndroidNetworking.post("https://hermesmessenger-testing.duckdns.org/api/loadmessages/" + offset)
             .addBodyParameter("uuid", HermesUUID)
             .setPriority(Priority.LOW)
@@ -127,21 +135,23 @@ public class Chat extends AppCompatActivity {
                         try {
                             JSONObject json = res.getJSONObject(n);
 
-                            final String sender = json.getString("username");
-                            final String text = json.getString("message");
-                            final String time = json.getString("time");
-                            final boolean belongsToCurrentUser = sender.equals(HermesUsername);
-                            //System.out.println(sender + " " + text + " " + time + " " + belongsToCurrentUser);
 
+                            if(json.getInt("time")>offset) {
+                                final String sender = json.getString("username");
+                                final String text = json.getString("message");
+                                final String time = json.getString("time");
+                                final boolean belongsToCurrentUser = sender.equals(HermesUsername);
+                                //System.out.println(sender + " " + HermesUsername + " " + sender.equals(HermesUsername));
 
-                            runOnUiThread(new Runnable() {
-                                  @Override
-                                  public void run() {
-                                      messageAdapter.add(new Message(sender, text, time, belongsToCurrentUser));
-                                  }
-                            });
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        messageAdapter.add(new Message(sender, text, time, belongsToCurrentUser));
+                                    }
+                                });
 
-                            editor.putInt("Offset", json.getInt("time"));
+                                offset = json.getInt("time");
+                            }
 
                         } catch (JSONException err) {
                             Log.e("Error", "JSON error: " + err);
