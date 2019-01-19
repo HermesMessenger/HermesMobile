@@ -37,7 +37,7 @@ public class Login extends AppCompatActivity {
     public void login(View view) {
         EditText userText = (EditText) findViewById(R.id.username);
         EditText passText = (EditText) findViewById(R.id.password);
-        String username = userText.getText().toString();
+        final String username = userText.getText().toString();
         String password = passText.getText().toString();
 
         if (username.matches("")) {
@@ -57,6 +57,7 @@ public class Login extends AppCompatActivity {
 
                     SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("preferences", 0);
                     SharedPreferences.Editor editor = sharedPref.edit();
+                    editor.putString("Username", username);
                     editor.putString("UUID", res);
                     editor.commit();
 
