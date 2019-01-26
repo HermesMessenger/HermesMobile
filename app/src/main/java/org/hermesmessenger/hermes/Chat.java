@@ -1,11 +1,12 @@
 package org.hermesmessenger.hermes;
 
-import android.content.Context;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -17,59 +18,38 @@ import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.JSONArrayRequestListener;
 import com.androidnetworking.interfaces.JSONObjectRequestListener;
-import com.androidnetworking.interfaces.ParsedRequestListener;
 import com.androidnetworking.interfaces.StringRequestListener;
-import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Date;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
 
+import static org.hermesmessenger.hermes.Settings.HermesURL;
+import static org.hermesmessenger.hermes.Settings.HermesUUID;
+import static org.hermesmessenger.hermes.Settings.HermesUsername;
 
-public class Chat extends AppCompatActivity {
+public class Chat extends AppCompatActivity implements Serializable {
 
-    private static class MessageStyleData {
-        public Bitmap avatar;
-        public String color;
-
-        public MessageStyleData(Bitmap avatar, String color) {
-            this.avatar = avatar;
-            this.color = color;
-        }
-    }
-
-    static String HermesURL;
-    String HermesUUID;
-    String HermesUsername;
-
-    MessageAdapter messageAdapter;
-    int offset = 0;
-    Map<String, MessageStyleData> user_styles; // TODO Save in images as paths to files, not bitmaps, because it causes an out of memory error
+    UserAdapter userAdapter = new UserAdapter();
+    MessageAdapter messageAdapter = new MessageAdapter(Chat.this);
+    Utils utils = new Utils();
+    int notificationID = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-
-        Timer timer = new Timer();
-        user_styles = new HashMap<>();
-
         super.onCreate(savedInstanceState);
 
-
-        Settings settings = new Settings(this);
-
-        HermesURL = "https://hermesmessenger-testing.duckdns.org";
-
-        HermesUUID = settings.getUUID();
-        HermesUsername = settings.getUsername();
+        new Settings(this);
 
         if (HermesUUID.equals("")) {
             startActivity(new Intent(this, Login.class));
@@ -79,24 +59,31 @@ public class Chat extends AppCompatActivity {
 
         AndroidNetworking.initialize(getApplicationContext());
 
-        messageAdapter = new MessageAdapter(Chat.this);
-        ListView messagesListView  = (ListView) findViewById(R.id.messages_view);
+        ListView messagesListView = findViewById(R.id.messages_view);
         messagesListView.setAdapter(messageAdapter);
 
-        Timer t = new Timer();
-        t.schedule(new TimerTask() {
+        try {
+            Log.d("Cache Read", "Reading cache...");
+            File messageFile = new File(getFilesDir(), "messageCache.txt");
+            File userFile = new File(getFilesDir(), "userCache.txt");
+            FileInputStream messagefis = new FileInputStream(messageFile);
+            FileInputStream userfis = new FileInputStream(userFile);
+            ObjectInputStream messageois = new ObjectInputStream(messagefis);
+            ObjectInputStream userois = new ObjectInputStream(userfis);
+            List<Message> messages = (List<Message>) messageois.readObject();
+            HashMap<String, User> users = (HashMap<String, User>) userois.readObject();
+            messageois.close();
+            userois.close();
 
-            @Override
-            public void run() {
-                Chat.this.runOnUiThread(new Runnable() {
+            messageAdapter.loadFromCache(messages);
+            userAdapter.loadFromCache(users);
 
-                    @Override
-                    public void run() {
-                        loadMessages();
-                    }
-                });
-            }
-        },0, 500);
+        } catch (Exception err) {
+            Log.e("Cache Read Error", err.toString());
+        }
+
+        utils.setTimeout(this::loadMessages, 500);
+        utils.setTimeout(this::writeCache, 1000 * 60 *10); // 10 minutes
 
     }
 
@@ -108,7 +95,7 @@ public class Chat extends AppCompatActivity {
         if (message.matches("^\\s*$")) {
             Toast.makeText(this, "Message is empty", Toast.LENGTH_SHORT).show();
 
-        } else AndroidNetworking.post(HermesURL+"/api/sendmessage/")
+        } else AndroidNetworking.post(HermesURL + "/api/sendmessage/")
             .addBodyParameter("uuid", HermesUUID)
             .addBodyParameter("message", message)
             .setPriority(Priority.MEDIUM)
@@ -128,18 +115,12 @@ public class Chat extends AppCompatActivity {
         msg.setText(""); // Clear message field
     }
 
-    String sender = "";
-    String text = "";
-    String time = "";
-    boolean belongsToCurrentUser = false;
-    String color = "#000000";
-    Bitmap avatar = null;
-
     public void loadMessages() {
 
         SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("preferences", 0);
-        //int offset = sharedPref.getInt("Offset", 0);
-        AndroidNetworking.post(HermesURL+"/api/loadmessages/" + offset)
+        final int offset = sharedPref.getInt("Offset", 0);
+
+        AndroidNetworking.post(HermesURL + "/api/loadmessages/" + offset)
             .addBodyParameter("uuid", HermesUUID)
             .setPriority(Priority.LOW)
             .build()
@@ -147,7 +128,6 @@ public class Chat extends AppCompatActivity {
                 @Override
                 public void onResponse(JSONArray res) {
 
-                    SharedPreferences sharedPref = Chat.this.getSharedPreferences("preferences", 0);
                     SharedPreferences.Editor editor = sharedPref.edit();
 
                     for(int n = 0; n < res.length(); n++) {
@@ -155,50 +135,43 @@ public class Chat extends AppCompatActivity {
                         try {
                             JSONObject json = res.getJSONObject(n);
 
-                            if(json.getInt("time")>offset) {
-                                sender = json.getString("username");
-                                text = json.getString("message");
-                                time = json.getString("time");
-                                belongsToCurrentUser = sender.equals(HermesUsername);
-                                if(!user_styles.containsKey(sender)){
-                                    AndroidNetworking.get(HermesURL+"/api/getSettings/" + sender).build().getAsJSONObject(new JSONObjectRequestListener() {
-                                        @Override
-                                        public void onResponse(JSONObject response) {
-                                            try {
-                                                avatar = Utils.getB64Image(response.getString("image"));
-                                                color = response.getString("color");
-                                                user_styles.put(sender, new MessageStyleData(avatar, color));
-                                                runOnUiThread(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        messageAdapter.add(new Message(sender, text, time, belongsToCurrentUser, avatar, color));
-                                                    }
-                                                });
-                                            }catch (JSONException e){
-                                                Log.e("Error", "JSON error: " + e);
-                                            }
-                                        }
+                            final String sender = json.getString("username");
+                            final String text = json.getString("message");
+                            final String time = json.getString("time");
+                            final boolean belongsToCurrentUser = sender.equals(HermesUsername);
 
-                                        @Override
-                                        public void onError(ANError anError) {
-                                            Log.e("Error", "Request error: " + anError);
-                                        }
-                                    });
-                                }else {
-                                    MessageStyleData nonNullStyle = (MessageStyleData) Objects.requireNonNull(user_styles.get(sender));
-                                    color = nonNullStyle.color;
-                                    avatar = nonNullStyle.avatar;
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            messageAdapter.add(new Message(sender, text, time, belongsToCurrentUser, avatar, color));
-                                        }
-                                    });
-                                }
+                            if (! userAdapter.containsKey(sender)) {
+
+                                AndroidNetworking.get(HermesURL + "/api/getSettings/" + sender).build().getAsJSONObject(new JSONObjectRequestListener() {
+                                    @Override
+                                    public void onResponse(JSONObject res) {
+                                        try {
+                                            final String color = res.getString("color");
+                                            final String image = res.getString("image");
 
 
-                                offset = json.getInt("time");
+                                            runOnUiThread(() -> userAdapter.add(sender, new User(color, image)));
+
+                                        } catch (JSONException err) {
+                                            Log.e("JSON error", err.toString());
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onError(ANError err) {
+                                        Log.e("HTTP error", err.toString());
+                                    }
+
+                                });
                             }
+
+                            Message message = new Message(sender, text, time, belongsToCurrentUser);
+
+                            runOnUiThread(() -> messageAdapter.add(message));
+
+                            if (!(Foreground.get().isForeground()))  showNotification(message);
+
+                            editor.putInt("Offset", json.getInt("time"));
 
                         } catch (JSONException err) {
                             Log.e("JSON error", err.toString());
@@ -212,8 +185,65 @@ public class Chat extends AppCompatActivity {
                     Log.e("HTTP error", err.toString());
                 }
             });
+
+        if (Foreground.get().isForeground()) {
+            utils.setTimeout(this::loadMessages, 200);
+
+        } else {
+            utils.setTimeout(this::loadMessages, 20000);
+        }
+
     }
 
-};
+    public void writeCache () {
+        try {
+
+            File messageFile = new File(getFilesDir(), "messageCache.txt");
+            File userFile = new File(getFilesDir(), "userCache.txt");
+
+            FileOutputStream messagefos = new FileOutputStream(messageFile);
+            FileOutputStream userfos = new FileOutputStream(userFile);
+            ObjectOutputStream messageoos = new ObjectOutputStream(messagefos);
+            ObjectOutputStream useroos = new ObjectOutputStream(userfos);
+
+            List<Message> messages = messageAdapter.getMessages();
+            HashMap<String, User> users = userAdapter.getUsers();
+
+            messageoos.writeObject(messages);
+            useroos.writeObject(users);
+            messageoos.close();
+            useroos.close();
+
+        } catch (Exception err) {
+            Log.e("Cache Write Error", err.toString());
+        }
+
+    }
+
+    public void showNotification(Message message) {
+
+        Log.d("Notifications", "Showing notification...");
+
+        Intent intent = new Intent(this, Chat.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "Messages")
+                .setSmallIcon(R.drawable.notification_icon)
+                .setContentTitle("New message from " + message.getSender())
+                .setContentText(message.getSender() + ": " + message.getMessage())
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText(message.getSender() + ": " + message.getMessage()))
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        notificationManager.notify(notificationID, mBuilder.build());
+
+        notificationID++;
+
+    }
+}
 
 

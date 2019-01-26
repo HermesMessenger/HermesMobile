@@ -1,16 +1,28 @@
 package org.hermesmessenger.hermes;
 
-
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Base64;
+import android.app.Application;
 import android.util.Log;
 
-import java.io.InputStream;
+import java.io.Serializable;
 
-public class Utils {
-    static public Bitmap getB64Image(String base64) {
-        byte[] decodedByte = Base64.decode(base64, Base64.DEFAULT);
-        return BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
+public class Utils extends Application implements Serializable {
+
+    @Override
+    public void onCreate(){
+        super.onCreate();
+        Foreground.init(this);
     }
+
+    public void setTimeout(Runnable runnable, int delay){
+        new Thread(() -> {
+            try {
+                Thread.sleep(delay);
+                runnable.run();
+            }
+            catch (Exception err){
+                Log.e("Timeout error", err.toString());
+            }
+        }).start();
+    }
+
 }

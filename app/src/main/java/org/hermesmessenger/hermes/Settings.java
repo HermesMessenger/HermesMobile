@@ -4,25 +4,19 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-public class Settings extends Application {
+import java.io.Serializable;
 
-    private String HermesUsername;
-    private String HermesUUID;
+public class Settings extends Application implements Serializable {
 
+    public static String HermesURL = "https://hermesmessenger-testing.duckdns.org";
+    public static String HermesUsername;
+    public static String HermesUUID;
 
     public Settings(Context context) {
 
         SharedPreferences sharedPref = context.getSharedPreferences("preferences",0);
         HermesUUID = sharedPref.getString("UUID", "");
         HermesUsername = sharedPref.getString("Username", "");
-    }
-
-    public String getUsername() {
-        return HermesUsername;
-    }
-
-    public String getUUID() {
-        return HermesUUID;
     }
 
 }

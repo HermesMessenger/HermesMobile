@@ -16,7 +16,6 @@
         android:divider="#fff"
         android:background="@color/colorBackground"
         android:layout_height="0dp"
-        android:transcriptMode="alwaysScroll"
         android:stackFromBottom="true"
     />
 

@@ -2,10 +2,6 @@ package org.hermesmessenger.hermes;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.GradientDrawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,10 +9,11 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MessageAdapter extends BaseAdapter {
+public class MessageAdapter extends BaseAdapter implements Serializable {
 
     List<Message> messages = new ArrayList<>();
     Context context;
@@ -27,8 +24,17 @@ public class MessageAdapter extends BaseAdapter {
 
     public void add(Message message) {
         this.messages.add(message);
-        this.notifyDataSetChanged(); // to render the list we need to notify
+        this.notifyDataSetChanged();
     }
+
+    public void loadFromCache(List<Message> messages ) {
+        this.messages = messages;
+    }
+
+    public List<Message> getMessages() {
+        return messages;
+    }
+
 
     @Override
     public Object getItem(int i) {
@@ -47,32 +53,40 @@ public class MessageAdapter extends BaseAdapter {
 
     @Override
     public View getView(int i, View convertView, ViewGroup viewGroup) {
-        MessageViewHolder holder = new MessageViewHolder();
-        LayoutInflater messageInflater = (LayoutInflater) context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
-        Message message = messages.get(i);
 
-        if (message.belongsToCurrentUser()) { // this message was sent by us so let's create a basic chat bubble on the right
-            convertView = messageInflater.inflate(R.layout.my_message, null);
-            holder.messageBody = (TextView) convertView.findViewById(R.id.message);
-            convertView.setTag(holder);
-            holder.messageBody.setText(message.getMessage());
-        } else { // this message was sent by someone else so let's create an advanced chat bubble on the left
-            convertView = messageInflater.inflate(R.layout.their_message, null);
-            holder.avatar = (ImageView) convertView.findViewById(R.id.image);
+        if (convertView == null) {
 
-            holder.name = (TextView) convertView.findViewById(R.id.username);
-            holder.messageBody = (TextView) convertView.findViewById(R.id.message);
-            convertView.setTag(holder);
+            MessageViewHolder holder = new MessageViewHolder();
+            LayoutInflater messageInflater = (LayoutInflater) context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
+            Message message = messages.get(i);
 
+            if (message.belongsToCurrentUser()) { // this message was sent by us so let's create a basic chat bubble on the right
+                convertView = messageInflater.inflate(R.layout.my_message, null);
+                holder.messageBody = convertView.findViewById(R.id.message);
+                convertView.setTag(holder);
+                holder.messageBody.setText(message.getMessage());
 
-            holder.name.setText(message.getSender());
-            holder.name.setTextColor(Color.parseColor(message.getColor()));
-            holder.messageBody.setText(message.getMessage());
-            holder.avatar.setImageBitmap(message.getAvatar());
-            /*ColorDrawable drawable = (ColorDrawable) holder.avatar.getBackground();
+            } else { // this message was sent by someone else so let's create an advanced chat bubble on the left
 
-            drawable.setColor(Color.parseColor("#1234ff"));*/
+                UserAdapter userAdapter = new UserAdapter();
+                User user = userAdapter.getUser(message.getSender());
+
+                convertView = messageInflater.inflate(R.layout.their_message, null);
+                convertView.setTag(holder);
+
+                holder.avatar = convertView.findViewById(R.id.image);
+                holder.name = convertView.findViewById(R.id.username);
+                holder.messageBody = convertView.findViewById(R.id.message);
+
+                holder.name.setText(message.getSender());
+             //   holder.name.setTextColor(Color.parseColor(user.getColor()));
+                holder.messageBody.setText(message.getMessage());
+
+               // holder.avatar.setImageBitmap(user.getImage_bitmap());
+
+            }
         }
+
         return convertView;
     }
 
