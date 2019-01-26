@@ -4,7 +4,9 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-public class Settings extends Application {
+import java.io.Serializable;
+
+public class Settings extends Application implements Serializable {
 
     public static String HermesURL = "https://hermesmessenger-testing.duckdns.org";
     public static String HermesUsername;
